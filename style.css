@@ -263,12 +263,13 @@ html, body {
 .verse-ref-input:focus { outline: none; border-color: var(--accent); }
 .btn-fetch-verse {
   padding: 0 14px; border-radius: var(--radius-sm);
-  background: var(--bg3); border: 1px solid var(--border2);
-  color: var(--text2); font-size: 13px; cursor: pointer;
+  background: var(--bg3); border: 1.5px solid var(--accent);
+  color: var(--accent); font-size: 13px; cursor: pointer;
   font-family: var(--font); white-space: nowrap;
-  transition: all 0.15s;
+  transition: all 0.15s; text-decoration: none;
+  display: flex; align-items: center; font-weight: 600;
 }
-.btn-fetch-verse:hover { border-color: var(--accent); color: var(--accent); }
+.btn-fetch-verse:hover { background: rgba(212,112,138,0.1); }
 .verse-text {
   width: 100%; background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 12px;

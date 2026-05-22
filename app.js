@@ -31,6 +31,9 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
+// 앱 시작 시 로그인 상태 영구 유지 설정
+setPersistence(auth, browserLocalPersistence).catch(console.error);
+
 // ──────────────────────────────────────────
 //  앱 상태
 // ──────────────────────────────────────────
