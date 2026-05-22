@@ -14,7 +14,7 @@ import { getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc, quer
 //  🔧 설정: 아래 두 값을 실제 값으로 교체
 // ──────────────────────────────────────────
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDb67cu7YWlfHkhtjLuIW1Xb6Ex40NeLSc",
+  apiKey: "AIzaSyDbG7cu7YW1fHkhtjLuIW1Xb6Ex40NeLSc",
   authDomain: "qt-journal-eeheeree.firebaseapp.com",
   projectId: "qt-journal-eeheeree",
   storageBucket: "qt-journal-eeheeree.firebasestorage.app",
