@@ -7,22 +7,25 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg: #0a0a0a;
-  --bg2: #111111;
-  --bg3: #1a1a1a;
-  --bg4: #222222;
-  --border: #2a2a2a;
-  --border2: #333333;
-  --text: #e8e8e8;
-  --text2: #999999;
-  --text3: #666666;
-  --accent: #c8a96e;
-  --accent2: #a88a50;
-  --accent-glow: rgba(200,169,110,0.15);
-  --blue: #7c9fd4;
-  --red: #d47c7c;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --bg: #fdf8f5;
+  --bg2: #ffffff;
+  --bg3: #f5f0eb;
+  --bg4: #ede6df;
+  --border: #e8ddd5;
+  --border2: #d9cec5;
+  --text: #3d2e25;
+  --text2: #7a6358;
+  --text3: #b09a8e;
+  --accent: #d4708a;
+  --accent2: #c45a76;
+  --accent-glow: rgba(212,112,138,0.12);
+  --blue: #7ab3d4;
+  --red: #e07070;
+  --mint: #7abfb0;
+  --lavender: #a99bd4;
+  --peach: #f0b89a;
+  --radius: 16px;
+  --radius-sm: 10px;
   --topbar-h: 56px;
   --bottom-nav-h: 64px;
   --font: 'Pretendard', -apple-system, sans-serif;
@@ -47,25 +50,26 @@ html, body {
 #screen-login {
   align-items: center;
   justify-content: center;
-  background: radial-gradient(ellipse at 50% 0%, rgba(200,169,110,0.08) 0%, transparent 70%), var(--bg);
+  background: linear-gradient(135deg, #fdf0f4 0%, #f5f0ff 50%, #f0faf8 100%);
 }
 .login-wrap {
   display: flex; flex-direction: column; align-items: center;
   gap: 32px; padding: 32px 24px; max-width: 360px; width: 100%;
 }
 .login-logo { text-align: center; }
-.logo-icon { font-size: 40px; color: var(--accent); margin-bottom: 12px; }
-.logo-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+.logo-icon { font-size: 40px; margin-bottom: 12px; }
+.logo-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
 .logo-sub { font-size: 13px; color: var(--text2); margin-top: 4px; letter-spacing: 2px; }
 .login-card {
   width: 100%; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 16px; padding: 28px 24px; text-align: center;
+  border-radius: 20px; padding: 28px 24px; text-align: center;
+  box-shadow: 0 8px 32px rgba(212,112,138,0.1);
 }
 .login-desc { font-size: 14px; color: var(--text2); line-height: 1.8; margin-bottom: 24px; }
 .btn-google {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   width: 100%; padding: 14px; border-radius: var(--radius);
-  background: var(--bg3); border: 1px solid var(--border2);
+  background: var(--bg3); border: 1.5px solid var(--border2);
   color: var(--text); font-size: 15px; font-family: var(--font);
   font-weight: 500; cursor: pointer; transition: all 0.2s;
 }
