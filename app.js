@@ -5,7 +5,7 @@
 // =============================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc, query, where }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -52,7 +52,10 @@ const fmtDate = s => { const [y,m,d] = s.split('-'); return `${y}년 ${+m}월 ${
 //  Auth
 // ──────────────────────────────────────────
 document.getElementById('btn-login').addEventListener('click', async () => {
-  try { await signInWithPopup(auth, provider); }
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithPopup(auth, provider);
+  }
   catch(e) { console.error(e); }
 });
 
@@ -386,55 +389,7 @@ document.getElementById('btn-search-close').addEventListener('click', () => show
 // ──────────────────────────────────────────
 // 한국어 성경 API (scripture.api.bible) — 무료 API key 필요
 // https://scripture.api.bible 에서 가입 후 key 발급
-const BIBLE_API_KEY = "YOUR_BIBLE_API_KEY"; // 교체 필요
-const KRV_BIBLE_ID = "9879dbb7cfe39e4d-04"; // 개역개정
-
-document.getElementById('btn-fetch-verse').addEventListener('click', async () => {
-  const ref = document.getElementById('verse-ref').value.trim();
-  if(!ref) return;
-  const btn = document.getElementById('btn-fetch-verse');
-  btn.textContent = '불러오는 중...'; btn.disabled = true;
-  try {
-    // 간단한 구절 파싱: "롬 8:1" → book abbr 변환 필요 (별도 맵 활용)
-    const verseText = await fetchVerseFromAPI(ref);
-    if(verseText) document.getElementById('verse-text').value = verseText;
-    else document.getElementById('verse-text').placeholder = '본문을 찾지 못했어요. 직접 입력해주세요.';
-  } catch(e) {
-    document.getElementById('verse-text').placeholder = '오류가 발생했어요. 직접 입력해주세요.';
-  }
-  btn.textContent = '불러오기'; btn.disabled = false;
-});
-
-async function fetchVerseFromAPI(ref) {
-  // 한글 책명 → 영문 약어 변환 맵 (주요 책)
-  const bookMap = {
-    '창': 'GEN','출': 'EXO','레': 'LEV','민': 'NUM','신': 'DEU',
-    '수': 'JOS','삿': 'JDG','룻': 'RUT','삼상': '1SA','삼하': '2SA',
-    '왕상': '1KI','왕하': '2KI','대상': '1CH','대하': '2CH',
-    '스': 'EZR','느': 'NEH','에': 'EST','욥': 'JOB','시': 'PSA',
-    '잠': 'PRO','전': 'ECC','아': 'SNG','사': 'ISA','렘': 'JER',
-    '애': 'LAM','겔': 'EZK','단': 'DAN','호': 'HOS','욜': 'JOL',
-    '암': 'AMO','옵': 'OBA','욘': 'JON','미': 'MIC','나': 'NAH',
-    '합': 'HAB','습': 'ZEP','학': 'HAG','슥': 'ZEC','말': 'MAL',
-    '마': 'MAT','막': 'MRK','눅': 'LUK','요': 'JHN','행': 'ACT',
-    '롬': 'ROM','고전': '1CO','고후': '2CO','갈': 'GAL','엡': 'EPH',
-    '빌': 'PHP','골': 'COL','살전': '1TH','살후': '2TH',
-    '딤전': '1TI','딤후': '2TI','딛': 'TIT','몬': 'PHM',
-    '히': 'HEB','약': 'JAS','벧전': '1PE','벧후': '2PE',
-    '요일': '1JN','요이': '2JN','요삼': '3JN','유': 'JUD','계': 'REV'
-  };
-  // 파싱: "롬 8:1-17" → book="롬", ch=8, v="1-17"
-  const m = ref.match(/^(\S+)\s+(\d+):(\d+(?:-\d+)?)$/);
-  if(!m) return null;
-  const [, bookKr, ch, vs] = m;
-  const bookId = bookMap[bookKr]; if(!bookId) return null;
-  const verseId = `${bookId}.${ch}.${vs.split('-')[0]}`;
-  const endVerse = vs.includes('-') ? `${bookId}.${ch}.${vs.split('-')[1]}` : verseId;
-  const url = `https://api.scripture.api.bible/v1/bibles/${KRV_BIBLE_ID}/passages/${verseId}${vs.includes('-')?'-'+endVerse:''}?content-type=text&include-verse-numbers=false`;
-  const res = await fetch(url, { headers: { 'api-key': BIBLE_API_KEY } });
-  const json = await res.json();
-  return json?.data?.content?.replace(/<[^>]+>/g, '').trim() || null;
-}
+// 성경 본문: 매일성경 사이트 링크로 대체 (index.html의 a 태그 처리)
 
 // ──────────────────────────────────────────
 //  AI 묵상 질문 (Cloudflare Worker)
