@@ -340,7 +340,9 @@ function openViewPage(ds) {
     s.innerHTML = `<div class="view-section-title">🎨 그림</div><img class="view-drawing" src="${e.drawing}">`;
     container.appendChild(s);
   }
-  document.getElementById('btn-edit-entry').onclick = () => openWritePage(ds);
+  document.getElementById('btn-edit-entry').onclick = () => {
+    openWritePage(ds);
+  };
   showPage('view');
 }
 
