@@ -64,8 +64,8 @@
         <div class="cal-days" id="cal-days"></div>
       </div>
       <div class="stats-row" id="stats-row">
-        <div class="stat-card"><div class="stat-num" id="stat-total">0</div><div class="stat-label">전체 기록</div></div>
-        <div class="stat-card"><div class="stat-num" id="stat-month">0</div><div class="stat-label">이번 달</div></div>
+        <div class="stat-card clickable" id="card-total"><div class="stat-num" id="stat-total">0</div><div class="stat-label">전체 기록</div></div>
+        <div class="stat-card clickable" id="card-month"><div class="stat-num" id="stat-month">0</div><div class="stat-label">이번 달</div></div>
         <div class="stat-card"><div class="stat-num" id="stat-streak">0</div><div class="stat-label">연속 일수</div></div>
       </div>
       <div class="tag-filter-row" id="tag-filter-row">
@@ -236,6 +236,19 @@
     <div class="modal-body">
       <input type="text" id="search-input" class="search-input-modal" placeholder="말씀, 내용, 태그 검색...">
       <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== LIST MODAL (전체기록 / 이번달) ===== -->
+<div id="modal-list" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2 id="list-title">기록</h2>
+      <button class="modal-close" id="btn-list-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="list-results" class="search-results"></div>
     </div>
   </div>
 </div>

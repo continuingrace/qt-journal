@@ -487,6 +487,42 @@ document.getElementById('btn-clear-data').addEventListener('click', () => {
 });
 
 // ──────────────────────────────────────────
+//  기록 목록 모달 (전체기록 / 이번달)
+// ──────────────────────────────────────────
+function openListModal(scope) {
+  let entries = Object.entries(allEntries);
+  if(scope === 'month') {
+    const ym = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
+    entries = entries.filter(([ds]) => ds.startsWith(ym));
+    document.getElementById('list-title').textContent = `${currentYear}년 ${currentMonth+1}월 기록`;
+  } else {
+    document.getElementById('list-title').textContent = '전체 기록';
+  }
+  entries.sort((a,b) => b[0].localeCompare(a[0])); // 최신순
+
+  const container = document.getElementById('list-results');
+  container.innerHTML = '';
+  if(!entries.length) {
+    container.innerHTML = '<p style="color:var(--text3);font-size:14px;text-align:center;padding:20px">아직 기록이 없어요</p>';
+  } else {
+    entries.forEach(([ds, entry]) => {
+      const preview = [entry.creative, entry.indObserve, entry.indInterpret,
+        entry.indApply, entry.sermonNotes, entry.sermonReflection].find(t=>t) || '';
+      const el = document.createElement('div'); el.className = 'search-item';
+      el.innerHTML = `<div class="search-item-date">${fmtDate(ds)} ${entry.verseRef ? '· '+entry.verseRef : ''}</div>
+        <div class="search-item-preview">${preview.slice(0,60)}${preview.length>60?'...':''}</div>`;
+      el.addEventListener('click', () => { showModal('list', false); openViewPage(ds); });
+      container.appendChild(el);
+    });
+  }
+  showModal('list', true);
+}
+
+document.getElementById('card-total').addEventListener('click', () => openListModal('all'));
+document.getElementById('card-month').addEventListener('click', () => openListModal('month'));
+document.getElementById('btn-list-close').addEventListener('click', () => showModal('list', false));
+
+// ──────────────────────────────────────────
 //  Search
 // ──────────────────────────────────────────
 document.getElementById('search-input').addEventListener('input', e => {
