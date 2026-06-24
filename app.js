@@ -1,18 +1,43 @@
 // =============================================
 //  QT Journal — app.js
-//  localStorage 저장 · 로그인 없음 (Firebase 제거)
-//  AI 묵상 질문은 Cloudflare Worker 그대로 사용
+//  Firebase Auth + Firestore + 전체 앱 로직
+//  [설정 필요] FIREBASE_CONFIG 와 WORKER_URL 교체
 // =============================================
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, deleteDoc, query, where }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 // ──────────────────────────────────────────
-//  🔧 설정
+//  🔧 설정: 아래 두 값을 실제 값으로 교체
 // ──────────────────────────────────────────
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDbG7cu7YW1fHkhtjLuIW1Xb6Ex40NeLSc",
+  authDomain: "qt-journal-eeheeree.firebaseapp.com",
+  projectId: "qt-journal-eeheeree",
+  storageBucket: "qt-journal-eeheeree.firebasestorage.app",
+  messagingSenderId: "357865374616",
+  appId: "1:357865374616:web:ba07f857f46819b432a1ed"
+};
 const WORKER_URL = "https://lucky-paper-33a1.continuingrace.workers.dev"; // Cloudflare Worker URL
-const STORAGE_KEY = "qt-journal-entries";
+
+// ──────────────────────────────────────────
+//  Firebase 초기화
+// ──────────────────────────────────────────
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+// 앱 시작 시 로그인 상태 영구 유지 설정
+setPersistence(auth, browserLocalPersistence).catch(console.error);
 
 // ──────────────────────────────────────────
 //  앱 상태
 // ──────────────────────────────────────────
+let currentUser = null;
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
 let selectedDate = null;
@@ -27,28 +52,51 @@ const todayStr = () => toDateStr(new Date().getFullYear(), new Date().getMonth()
 const fmtDate = s => { const [y,m,d] = s.split('-'); return `${y}년 ${+m}월 ${+d}일`; };
 
 // ──────────────────────────────────────────
-//  localStorage 저장/불러오기
+//  Auth
 // ──────────────────────────────────────────
-function loadAllEntries() {
+document.getElementById('btn-login').addEventListener('click', async () => {
   try {
-    allEntries = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch {
-    allEntries = {};
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithPopup(auth, provider);
   }
+  catch(e) { console.error(e); }
+});
+
+document.getElementById('btn-logout').addEventListener('click', async () => {
+  await signOut(auth);
+  allEntries = {}; allTags = new Set();
+  showModal('settings', false);
+});
+
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  document.getElementById('screen-login').classList.toggle('active', !user);
+  document.getElementById('screen-app').classList.toggle('active', !!user);
+  if (user) {
+    document.getElementById('setting-user').textContent = `${user.displayName} (${user.email})`;
+    await loadAllEntries();
+    renderCalendar();
+    renderStats();
+    renderTagChips();
+    showStreakToast();
+  }
+});
+
+// ──────────────────────────────────────────
+//  Firestore CRUD
+// ──────────────────────────────────────────
+async function saveEntry(dateStr, data) {
+  const ref = doc(db, 'users', currentUser.uid, 'entries', dateStr);
+  await setDoc(ref, { ...data, updatedAt: Date.now() });
+  allEntries[dateStr] = data;
   updateTagSet();
 }
 
-function persist() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(allEntries));
-  } catch(e) {
-    alert('저장 공간이 부족해요. 오래된 기록을 백업 후 정리해주세요.');
-  }
-}
-
-function saveEntry(dateStr, data) {
-  allEntries[dateStr] = { ...data, updatedAt: Date.now() };
-  persist();
+async function loadAllEntries() {
+  const col = collection(db, 'users', currentUser.uid, 'entries');
+  const snap = await getDocs(col);
+  allEntries = {};
+  snap.forEach(d => { allEntries[d.id] = d.data(); });
   updateTagSet();
 }
 
@@ -202,7 +250,7 @@ document.getElementById('btn-write-today').addEventListener('click', () => openW
 document.getElementById('btn-back-write').addEventListener('click', () => { showPage('calendar'); renderCalendar(); renderStats(); renderTagChips(); });
 document.getElementById('btn-save').addEventListener('click', saveCurrentEntry);
 
-function saveCurrentEntry() {
+async function saveCurrentEntry() {
   const btn = document.getElementById('btn-save');
   btn.textContent = '저장 중...'; btn.disabled = true;
   const tags = getCurrentTagsArray();
@@ -221,7 +269,7 @@ function saveCurrentEntry() {
     drawing: drawingCanvas ? drawingCanvas.toDataURL('image/png') : null,
     tags
   };
-  saveEntry(editingDate, data);
+  await saveEntry(editingDate, data);
   btn.textContent = '저장됨 ✓'; btn.disabled = false;
   setTimeout(() => { btn.textContent = '저장'; }, 1500);
   renderCalendar(); renderStats(); renderTagChips();
@@ -342,13 +390,20 @@ document.getElementById('btn-settings-close').addEventListener('click', () => sh
 document.getElementById('btn-search-close').addEventListener('click', () => showModal('search', false));
 
 // ──────────────────────────────────────────
+//  Bible API
+// ──────────────────────────────────────────
+// 한국어 성경 API (scripture.api.bible) — 무료 API key 필요
+// https://scripture.api.bible 에서 가입 후 key 발급
+// 성경 본문: 매일성경 사이트 링크로 대체 (index.html의 a 태그 처리)
+
+// ──────────────────────────────────────────
 //  AI 묵상 질문 (Cloudflare Worker)
 // ──────────────────────────────────────────
 document.getElementById('btn-get-ai').addEventListener('click', async () => {
   const verse = document.getElementById('verse-text').value || document.getElementById('verse-ref').value;
   if(!verse.trim()) { alert('먼저 말씀을 입력해주세요.'); return; }
   const btn = document.getElementById('btn-get-ai');
-  btn.textContent = '생성 중...'; btn.disabled = true;
+  btn.textContent = '받아오는 중...'; btn.disabled = true;
   try {
     const res = await fetch(WORKER_URL + '/qt-questions', {
       method: 'POST',
@@ -362,13 +417,24 @@ document.getElementById('btn-get-ai').addEventListener('click', async () => {
     questions.forEach(q => {
       const el = document.createElement('div');
       el.className = 'ai-question-item'; el.textContent = q;
+      el.title = '탭하면 아래 기록칸에 들어가요';
+      el.addEventListener('click', () => insertQuestionIntoAnswer(q));
       container.appendChild(el);
     });
   } catch(e) {
-    document.getElementById('ai-questions').innerHTML = '<p class="ai-hint">AI 연결에 실패했어요. Worker URL을 확인해주세요.</p>';
+    document.getElementById('ai-questions').innerHTML = '<p class="ai-hint">질문을 받아오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
   }
-  btn.textContent = '질문 생성하기'; btn.disabled = false;
+  btn.textContent = '질문 받기'; btn.disabled = false;
 });
+
+function insertQuestionIntoAnswer(question) {
+  const textarea = document.getElementById('creative-text');
+  const prefix = textarea.value.trim() ? textarea.value.trim() + '\n\n' : '';
+  textarea.value = prefix + 'Q. ' + question + '\n';
+  textarea.focus();
+  textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+  textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
 // ──────────────────────────────────────────
 //  Drawing Canvas
@@ -463,7 +529,7 @@ document.getElementById('restore-file').addEventListener('change', async e => {
     const json = JSON.parse(text);
     const entries = json.entries || json;
     for(const [ds, data] of Object.entries(entries)) {
-      saveEntry(ds, data);
+      await saveEntry(ds, data);
     }
     alert(`✓ ${Object.keys(entries).length}개 항목이 복구되었습니다.`);
     renderCalendar(); renderStats(); renderTagChips();
@@ -472,55 +538,6 @@ document.getElementById('restore-file').addEventListener('change', async e => {
   }
   e.target.value = '';
 });
-
-// ──────────────────────────────────────────
-//  데이터 초기화 (이 기기에서 모든 기록 삭제)
-// ──────────────────────────────────────────
-document.getElementById('btn-clear-data').addEventListener('click', () => {
-  if(!confirm('이 기기에 저장된 모든 묵상 기록을 삭제할까요?\n되돌릴 수 없으니 먼저 백업을 권장해요.')) return;
-  if(!confirm('정말 삭제할까요? 마지막 확인입니다.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  allEntries = {}; allTags = new Set(); activeTagFilter = null;
-  showModal('settings', false);
-  renderCalendar(); renderStats(); renderTagChips();
-  alert('모든 기록이 삭제되었습니다.');
-});
-
-// ──────────────────────────────────────────
-//  기록 목록 모달 (전체기록 / 이번달)
-// ──────────────────────────────────────────
-function openListModal(scope) {
-  let entries = Object.entries(allEntries);
-  if(scope === 'month') {
-    const ym = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}`;
-    entries = entries.filter(([ds]) => ds.startsWith(ym));
-    document.getElementById('list-title').textContent = `${currentYear}년 ${currentMonth+1}월 기록`;
-  } else {
-    document.getElementById('list-title').textContent = '전체 기록';
-  }
-  entries.sort((a,b) => b[0].localeCompare(a[0])); // 최신순
-
-  const container = document.getElementById('list-results');
-  container.innerHTML = '';
-  if(!entries.length) {
-    container.innerHTML = '<p style="color:var(--text3);font-size:14px;text-align:center;padding:20px">아직 기록이 없어요</p>';
-  } else {
-    entries.forEach(([ds, entry]) => {
-      const preview = [entry.creative, entry.indObserve, entry.indInterpret,
-        entry.indApply, entry.sermonNotes, entry.sermonReflection].find(t=>t) || '';
-      const el = document.createElement('div'); el.className = 'search-item';
-      el.innerHTML = `<div class="search-item-date">${fmtDate(ds)} ${entry.verseRef ? '· '+entry.verseRef : ''}</div>
-        <div class="search-item-preview">${preview.slice(0,60)}${preview.length>60?'...':''}</div>`;
-      el.addEventListener('click', () => { showModal('list', false); openViewPage(ds); });
-      container.appendChild(el);
-    });
-  }
-  showModal('list', true);
-}
-
-document.getElementById('card-total').addEventListener('click', () => openListModal('all'));
-document.getElementById('card-month').addEventListener('click', () => openListModal('month'));
-document.getElementById('btn-list-close').addEventListener('click', () => showModal('list', false));
 
 // ──────────────────────────────────────────
 //  Search
@@ -554,16 +571,3 @@ document.getElementById('search-input').addEventListener('input', e => {
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
-
-// ──────────────────────────────────────────
-//  앱 시작
-// ──────────────────────────────────────────
-function init() {
-  loadAllEntries();
-  document.getElementById('setting-user').textContent = '📱 이 기기에 저장됨 (로그인 없음)';
-  renderCalendar();
-  renderStats();
-  renderTagChips();
-  showStreakToast();
-}
-init();
