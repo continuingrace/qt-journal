@@ -1,10 +1,10 @@
-const CACHE = "qt-journal-v2";
+const CACHE = "qt-journal-v3";
 const ASSETS = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/app.js",
-  "/manifest.json",
+  "/qt-journal/",
+  "/qt-journal/index.html",
+  "/qt-journal/style.css",
+  "/qt-journal/app.js",
+  "/qt-journal/manifest.json",
   "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css"
 ];
 
@@ -23,9 +23,7 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  if (e.request.url.includes("firebase") ||
-      e.request.url.includes("workers.dev") ||
-      e.request.url.includes("scripture.api")) {
+  if (e.request.url.includes("workers.dev")) {
     return;
   }
   e.respondWith(
