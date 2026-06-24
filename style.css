@@ -37,45 +37,10 @@ html, body {
   overflow: hidden;
 }
 
-/* ===== SCREENS ===== */
 .screen { display: none; width: 100%; height: 100vh; }
 .screen.active { display: flex; flex-direction: column; }
 
-/* ===== LOGIN ===== */
-#screen-login {
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #fdf0f4 0%, #f5f0ff 50%, #f0faf8 100%);
-}
-.login-wrap {
-  display: flex; flex-direction: column; align-items: center;
-  gap: 32px; padding: 32px 24px; max-width: 360px; width: 100%;
-}
-.login-logo { text-align: center; }
-.logo-icon { font-size: 40px; margin-bottom: 12px; }
-.logo-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
-.logo-sub { font-size: 13px; color: var(--text2); margin-top: 4px; letter-spacing: 2px; }
-.login-card {
-  width: 100%; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 20px; padding: 28px 24px; text-align: center;
-  box-shadow: 0 8px 32px rgba(212,112,138,0.1);
-}
-.login-desc { font-size: 14px; color: var(--text2); line-height: 1.8; margin-bottom: 24px; }
-.btn-google {
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; padding: 14px; border-radius: var(--radius);
-  background: var(--bg3); border: 1.5px solid var(--border2);
-  color: var(--text); font-size: 15px; font-family: var(--font);
-  font-weight: 500; cursor: pointer; transition: all 0.2s;
-}
-.btn-google:hover { background: var(--bg4); border-color: var(--accent); }
-.login-footer { font-size: 12px; color: var(--text3); text-align: center; }
-
-/* ===== APP SHELL ===== */
-#screen-app {
-  display: none; flex-direction: column;
-  height: 100vh; overflow: hidden;
-}
+#screen-app { display: none; flex-direction: column; height: 100vh; overflow: hidden; }
 #screen-app.active { display: flex; }
 
 /* ===== TOPBAR ===== */
@@ -193,11 +158,10 @@ html, body {
   border-radius: var(--radius); padding: 14px 8px; text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
+.stat-card.clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.stat-card.clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(212,112,138,0.15); }
 .stat-num { font-size: 24px; font-weight: 800; color: var(--accent); }
 .stat-label { font-size: 11px; color: var(--text2); margin-top: 2px; }
-.stat-card.clickable { cursor: pointer; transition: all 0.15s; }
-.stat-card.clickable:hover { border-color: var(--accent); }
-.stat-card.clickable:active { transform: scale(0.97); }
 
 .tag-filter-row {
   padding: 0 16px 16px;
@@ -319,7 +283,7 @@ html, body {
 .qt-textarea:focus { outline: none; border-color: var(--border2); }
 .qt-textarea::placeholder { color: var(--text3); }
 
-/* AI Box */
+/* Question Box */
 .ai-prompt-box {
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
@@ -328,9 +292,11 @@ html, body {
 .ai-questions { margin-bottom: 12px; }
 .ai-hint { font-size: 13px; color: var(--text3); }
 .ai-question-item {
-  font-size: 14px; color: var(--text2); padding: 8px 0;
+  font-size: 14px; color: var(--text2); padding: 10px 8px;
   border-bottom: 1px solid var(--border); line-height: 1.6;
+  cursor: pointer; border-radius: 8px; transition: background 0.15s;
 }
+.ai-question-item:hover, .ai-question-item:active { background: rgba(212,112,138,0.08); color: var(--text); }
 .ai-question-item:last-child { border-bottom: none; }
 .btn-ai {
   width: 100%; padding: 10px; border-radius: var(--radius-sm);
