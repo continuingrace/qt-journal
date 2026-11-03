@@ -5,6 +5,7 @@
 // =============================================
 
 const WORKER_URL = "https://lucky-paper-33a1.continuingrace.workers.dev";
+let qtAccessPassword = ""; // 메모리에만 유지하며 저장소에는 기록하지 않음
 const STORAGE_KEY = "qt-journal-entries";
 
 let currentYear = new Date().getFullYear();
@@ -336,15 +337,29 @@ document.getElementById('btn-search-close').addEventListener('click', () => show
 document.getElementById('btn-get-ai').addEventListener('click', async () => {
   const verse = document.getElementById('verse-text').value || document.getElementById('verse-ref').value;
   if(!verse.trim()) { alert('먼저 말씀을 입력해주세요.'); return; }
+  if(!qtAccessPassword) {
+    qtAccessPassword = prompt('QT 묵상 질문 생성 비밀번호를 입력해주세요.') || '';
+    if(!qtAccessPassword) return;
+  }
   const btn = document.getElementById('btn-get-ai');
   btn.textContent = '받아오는 중...'; btn.disabled = true;
   try {
     const res = await fetch(WORKER_URL + '/qt-questions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-QT-Password': qtAccessPassword
+      },
       body: JSON.stringify({ verse })
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) {
+      if(res.status === 401 || res.status === 403) {
+        qtAccessPassword = '';
+        throw new Error('접근 비밀번호가 올바르지 않습니다.');
+      }
+      throw new Error(data.error || '질문을 받아오지 못했습니다.');
+    }
     const questions = data.questions || [];
     const container = document.getElementById('ai-questions');
     container.innerHTML = '';
@@ -356,7 +371,11 @@ document.getElementById('btn-get-ai').addEventListener('click', async () => {
       container.appendChild(el);
     });
   } catch(e) {
-    document.getElementById('ai-questions').innerHTML = '<p class="ai-hint">질문을 받아오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+    const message = e.message === '접근 비밀번호가 올바르지 않습니다.'
+      ? e.message
+      : '질문을 받아오지 못했어요. 잠시 후 다시 시도해주세요.';
+    document.getElementById('ai-questions').innerHTML = '<p class="ai-hint"></p>';
+    document.querySelector('#ai-questions .ai-hint').textContent = message;
   }
   btn.textContent = '질문 받기'; btn.disabled = false;
 });

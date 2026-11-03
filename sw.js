@@ -1,4 +1,4 @@
-const CACHE = "qt-journal-v3";
+const CACHE = "qt-journal-v4";
 const ASSETS = [
   "/qt-journal/",
   "/qt-journal/index.html",
